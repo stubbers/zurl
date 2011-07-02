@@ -56,6 +56,8 @@ if (!empty($jsload))
 		<li><a href="<?php echo URL::site('url/complaint'); ?>"><img src="res/icons/bomb.png" alt="Report Spam" width="16" height="16" /> Report a spam URL</a></li>
 <?php if (!$logged_in): ?>
 <?php if (Kohana::config('app.allow_registration')): ?>		<li><a href="<?php echo URL::site('account/register'); ?>"><img src="res/icons/user_add.png" alt="Register" width="16" height="16" /> Register</a></li><?php endif; ?>
+<?php else: ?>
+<?php if (Kohana::config('app.allow_invites')): ?>		<li><a href="<?php echo URL::site('account/invite'); ?>"><img src="res/icons/user_go.png" alt="Register" width="16" height="16" /> Invite Friends</a></li><?php endif; ?>
 <?php endif; ?>
 	</ul>
 	<div id="container">

@@ -1,5 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.'); ?>
-
+		<h2>Your Account</h2>
 			<p>Welcome back, <?php echo Auth::instance()->get_user()->username; ?>. You currently have <span id="url_count"><?php echo $count; ?></span> URLs in your account.</p>
 <?php if ($count != 0) : ?>
 			<!-- Yes, inline styles. Must remove these eventually. -->
@@ -40,7 +40,7 @@ foreach ($urls as $url)
 			
 			
 			<?php echo $pagination; ?>
-			
+
 			<h2>Recent Visitors To All Your URLs</h2>
 <?php if (count($visits) == 0) : ?>
 				<p>Your URLs haven't had any visitors yet!</p>

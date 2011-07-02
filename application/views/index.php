@@ -15,9 +15,7 @@ if (!$logged_in)
 }
 else
 {
-	echo '
-			<h2>Your Account</h2>
-', $account;
+	echo $account;
 }
 ?>
 			

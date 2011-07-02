@@ -3,7 +3,7 @@ defined('SYSPATH') or die('No direct script access.');
 
 class Controller_Account extends Controller_Template
 {
-	protected $secure_actions = array('index', 'settings', 'logout', 'urls');
+	protected $secure_actions = array('index', 'settings', 'logout', 'urls', 'invite');
 	
 	public function action_index()
 	{
@@ -56,7 +56,7 @@ class Controller_Account extends Controller_Template
 		$this->request->redirect('');
 	}
 	
-	public function action_register()
+	public function action_register($invite_code)
 	{
 		// If they're logged in or we have disabled registration, we don't want to go to this page!
 		if ($this->logged_in || !Kohana::config('app.allow_registration'))
@@ -68,41 +68,146 @@ class Controller_Account extends Controller_Template
 		$page->captcha = Recaptcha::get_html();
 		$page->errors = array();
 		$page->values = array('username' => '', 'email' => '');
+		$page->invite_code = '';
+		
+		// If we are allowing invites they are required for registration
+		if (Kohana::config('app.allow_invites'))
+		{
+			// Did the user post the form
+			if ($_POST)
+			{
+				$user = ORM::factory('user');
+				$user->values($_POST);
+				// Add the CAPTCHA validation
+				$user->validate()
+					->callback('recaptcha_challenge_field', 'Recaptcha::validate');
+				// TODO: This seems very messy, but it seems validate() doesn't check it. :(
+				if (!csrf::valid($_POST['token']))
+				{
+					die('Token is invalid.');
+				}
+			
+				if ($user->check())
+				{
+					// Do we have a timezone?
+					$timezone = Arr::get($_POST, 'timezone');
+					if ($timezone != '')
+					{
+						$user->timezone = $timezone;
+					}
+					
+					$user->invited_by = $invite->user_id;
+					$user->save();
+					$user->add('roles', ORM::factory('role', array('name' => 'login')));
+					$user->login($_POST);
+					$this->session->set('top_message', 'Welcome to zURL! Your account has been created :)');
+					$this->request->redirect('');
+				}
+			
+				// If we're here, it failed, so we still have to show the page.
+				// Let's grab the errors
+				$page->errors = $user->validate()->errors('register');
+				$page->values = $user->validate();
+			} else {
+				// If an invite code was provided
+				// TODO : Not sure how to let the invite code be null, but fix this
+				if ($invite_code)
+				{
+					$invite = ORM::factory('invite')->where('auth_code', '=', $invite_code)->find();
+			
+					// Is the invite code valid?
+					if ($invite->loaded())
+					{
+						$page->invite_code = $invite_code;
+						$page->values = array('username' => '', 'email' => $invite->email);
+						return;
+					}
+				}
+				
+				$this->session->set('top_message', 'Invalid invite code provided. Registration denied');
+				$this->request->redirect('');
+			}
+		// Invites are not turned on so use the standard registration
+		} else {
+			// Did the user post the form?
+			if ($_POST)
+			{
+				$user = ORM::factory('user');
+				$user->values($_POST);
+				// Add the CAPTCHA validation
+				$user->validate()
+					->callback('recaptcha_challenge_field', 'Recaptcha::validate');
+				// TODO: This seems very messy, but it seems validate() doesn't check it. :(
+				if (!csrf::valid($_POST['token']))
+				{
+					die('Token is invalid.');
+				}
+			
+				if ($user->check())
+				{
+					// Do we have a timezone?
+					$timezone = Arr::get($_POST, 'timezone');
+					if ($timezone != '')
+					{
+						$user->timezone = $timezone;
+					}
+				
+					$user->save();
+					$user->add('roles', ORM::factory('role', array('name' => 'login')));
+					$user->login($_POST);
+					$this->session->set('top_message', 'Welcome to zURL! Your account has been created :)');
+					$this->request->redirect('');
+				}
+			
+				// If we're here, it failed, so we still have to show the page.
+				// Let's grab the errors
+				$page->errors = $user->validate()->errors('register');
+				$page->values = $user->validate();
+			}
+		}
+	}
+	
+	public function action_invite()
+	{
+		// If they aren't logged in or we have disabled invites, we don't want to go to this page!
+		if (!$this->logged_in || !Kohana::config('app.allow_invites'))
+			Request::instance()->redirect('');
+		
+		$this->template->title = 'Invite Friends';
+		$page = $this->template->body = new View('account/invite');
+		$page->errors = array();
+		$page->values = array('email' => '');
 		
 		// Did the user post the form?
 		if ($_POST)
 		{
-			$user = ORM::factory('user');
-			$user->values($_POST);
-			// Add the CAPTCHA validation
-			$user->validate()
-				->callback('recaptcha_challenge_field', 'Recaptcha::validate');
-			// TODO: This seems very messy, but it seems validate() doesn't check it. :(
-			if (!csrf::valid($_POST['token']))
-			{
-				die('Token is invalid.');
-			}
+			$invite = ORM::factory('invite');
+			$invite->values($_POST);
+			$invite->user = $this->user;
 			
-			if ($user->check())
-			{
-				// Do we have a timezone?
-				$timezone = Arr::get($_POST, 'timezone');
-				if ($timezone != '')
-				{
-					$user->timezone = $timezone;
-				}
-				
-				$user->save();
-				$user->add('roles', ORM::factory('role', array('name' => 'login')));
-				$user->login($_POST);
-				$this->session->set('top_message', 'Welcome to zURL! Your account has been created :)');
-				$this->request->redirect('');
-			}
+			// TODO : This needs some validation even though it's unlikely it would double up
+			$invite->auth_code = text::random($type = 'alnum', $length = 10);
+			$invite->validate();
 			
-			// If we're here, it failed, so we still have to show the page.
-			// Let's grab the errors
-			$page->errors = $user->validate()->errors('register');
-			$page->values = $user->validate();
+			// If someone has already invited this user
+			// TODO : This will probably work but Dan will need to clean this up a little
+			if ((bool) ORM::factory('invite')->where('email', '=', $invite->email)->count_all())
+			{
+				$page->errors = array('email' => 'User already invited');
+			} elseif ($invite->check()) {
+				// Decriment the number of invites remaining for this user
+				$this->user->invites_remaining --;
+				$this->user->save();
+
+				$invite->save();
+				$this->session->set('top_message', 'Invite sent');
+				$this->request->redirect('account/invite');
+			} else {
+				// If we're here, it failed, so we still have to show the page.
+				// Let's grab the errors
+				$page->errors = $invite->validate()->errors();
+				$page->values = $invite->validate();
+			}
 		}
 	}
 	

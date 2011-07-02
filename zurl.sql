@@ -139,9 +139,11 @@ CREATE TABLE IF NOT EXISTS `users` (
   `logins` int(10) unsigned NOT NULL DEFAULT '0',
   `last_login` int(10) unsigned DEFAULT NULL,
   `timezone` tinyint(4) DEFAULT NULL,
+  `invited_by` int(11) unsigned DEFAULT '0',
+  `invites_remaining` tinyint(4) unsigned DEFAULT '5',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_username` (`username`),
-  UNIQUE KEY `uniq_email` (`email`)
+  UNIQUE KEY `uniq_email` (`email`),
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -175,6 +177,20 @@ CREATE TABLE IF NOT EXISTS `domains` (
   KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
+--
+-- Table structure for table `invites`
+--
+
+CREATE TABLE IF NOT EXISTS `invites` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `email` varchar(127) NOT NULL,
+  `auth_code` varchar(10) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `auth_code` (`auth_code`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 --
 -- Constraints for dumped tables
@@ -185,6 +201,12 @@ CREATE TABLE IF NOT EXISTS `domains` (
 --
 ALTER TABLE `complaints`
   ADD CONSTRAINT `complaints_ibfk_1` FOREIGN KEY (`url_id`) REFERENCES `urls` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `invites`
+--
+ALTER TABLE `invites`
+  ADD CONSTRAINT `invites_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `hits`
@@ -218,7 +240,7 @@ ALTER TABLE `user_tokens`
 
 INSERT INTO `roles` (`id`, `name`, `description`) VALUES
 (1, 'login', 'Login privileges, granted after account confirmation'),
-(2, 'admin', 'Administrative user, has access to everything.');
+(2, 'admin', 'Administrative user, has access to everything.'),
   
 
 --
