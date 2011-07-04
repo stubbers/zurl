@@ -107,6 +107,14 @@ if (!IN_PRODUCTION || !Route::cache())
 			'action'     => 'favicon',
 		));
 
+		/*route allowing a blank invite id*/
+	Route::set('account-registration', 'account/register(/<invite_id>)')
+		->defaults(array(
+			'controller' => 'account',
+			'action' => 'register',
+			'invite_id' => '0',
+		));
+
 		/*default*/
 	Route::set('controllers', '(<controller>(/<action>(/<id>)))',
 		array(

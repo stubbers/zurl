@@ -121,10 +121,14 @@ class Controller_Account extends Controller_Template
 						$page->invite_code = $invite_code;
 						$page->values = array('username' => '', 'email' => $invite->email);
 						return;
+					} else {
+						$this->session->set('top_message', 'Invite code not valid. Registration denied');
 					}
+				} else {
+					$this->session->set('top_message', 'No invite code provided. Invites are currently enabled, you must provide a valid invite code to register');
 				}
-				
-				$this->session->set('top_message', 'Invalid invite code provided. Registration denied');
+
+				// If we got here the invite code given was wrong, redirect to front page
 				$this->request->redirect('');
 			}
 		// Invites are not turned on so use the standard registration
