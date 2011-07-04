@@ -57,6 +57,7 @@ if (!empty($jsload))
 <?php if (!$logged_in): ?>
 <?php if (Kohana::config('app.allow_registration')): ?>		<li><a href="<?php echo URL::site('account/register'); ?>"><img src="res/icons/user_add.png" alt="Register" width="16" height="16" /> Register</a></li><?php endif; ?>
 <?php endif; ?>
+		<li><a href="<?php echo URL::site('admin/'); ?>"><img src="res/icons/wrench.png" alt="Register" width="16" height="16" /> Admin</a></li>
 	</ul>
 	<div id="container">
 		<div id="body">

@@ -110,7 +110,7 @@ if (!IN_PRODUCTION || !Route::cache())
 		/*default*/
 	Route::set('controllers', '(<controller>(/<action>(/<id>)))',
 		array(
-			'controller' => '(url|url_goto|static|account|url_stats)',
+			'controller' => '(url|url_goto|static|account|url_stats|admin)',
 		))
 		->defaults(array(
 			'controller' => 'url',
