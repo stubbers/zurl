@@ -67,12 +67,34 @@ class Controller_Account extends Controller_Template
 		$page = $this->template->body = new View('account/register');
 		$page->captcha = Recaptcha::get_html();
 		$page->errors = array();
-		$page->values = array('username' => '', 'email' => '');
-		$page->invite_code = '';
+		$page->values = array('username' => '', 'email' => '', 'invite_code' => '');
 		
 		// If we are allowing invites they are required for registration
 		if (Kohana::config('app.allow_invites'))
 		{
+			// TODO : This is messy, surely the structure here could be more logical, come back to it
+			// Did the user post the form
+			if ($_POST)
+			{
+				$invite_code = $_POST['invite_code'];
+			}
+
+			// If an invite code was provided
+			if ($invite_code)
+			{
+				$invite = ORM::factory('invite')->where('auth_code', '=', $invite_code)->find();
+		
+				// Is the invite code invalid?
+				if (!$invite->loaded())
+				{
+					$this->session->set('top_message', 'Invite code not valid. Registration denied');
+					$this->request->redirect('');
+				}
+			} else {
+				$this->session->set('top_message', 'No invite code provided. Invites are currently enabled, you must provide a valid invite code to register');
+				$this->request->redirect('');
+			}
+
 			// Did the user post the form
 			if ($_POST)
 			{
@@ -85,6 +107,13 @@ class Controller_Account extends Controller_Template
 				if (!csrf::valid($_POST['token']))
 				{
 					die('Token is invalid.');
+				}
+
+				// Check to ensure the post email matches the invite one
+				if ($_POST['email'] != $invite->email)
+				{
+					$this->session->set('top_message', 'Stop messing with the post data please.');
+					$this->request->redirect('');
 				}
 			
 				if ($user->check())
@@ -99,6 +128,10 @@ class Controller_Account extends Controller_Template
 					$user->invited_by = $invite->user_id;
 					$user->save();
 					$user->add('roles', ORM::factory('role', array('name' => 'login')));
+
+					// Delete the invite to invalidate it
+					$this->invite->delete();
+
 					$user->login($_POST);
 					$this->session->set('top_message', 'Welcome to zURL! Your account has been created :)');
 					$this->request->redirect('');
@@ -109,28 +142,10 @@ class Controller_Account extends Controller_Template
 				$page->errors = $user->validate()->errors('register');
 				$page->values = $user->validate();
 			} else {
-				// If an invite code was provided
-				// TODO : Not sure how to let the invite code be null, but fix this
-				if ($invite_code)
-				{
-					$invite = ORM::factory('invite')->where('auth_code', '=', $invite_code)->find();
-			
-					// Is the invite code valid?
-					if ($invite->loaded())
-					{
-						$page->invite_code = $invite_code;
-						$page->values = array('username' => '', 'email' => $invite->email);
-						return;
-					} else {
-						$this->session->set('top_message', 'Invite code not valid. Registration denied');
-					}
-				} else {
-					$this->session->set('top_message', 'No invite code provided. Invites are currently enabled, you must provide a valid invite code to register');
-				}
-
-				// If we got here the invite code given was wrong, redirect to front page
-				$this->request->redirect('');
+				// If we got here, valid invite code and no post data
+				$page->values = array('username' => '', 'email' => $invite->email, 'invite_code' => $invite_code);
 			}
+
 		// Invites are not turned on so use the standard registration
 		} else {
 			// Did the user post the form?
