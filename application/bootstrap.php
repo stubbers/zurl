@@ -106,11 +106,18 @@ if (!IN_PRODUCTION || !Route::cache())
 			'controller' => 'url_goto',
 			'action'     => 'favicon',
 		));
+	
+	Route::set('admin_complaint', '(admin/<controller>(/<action>(/<id>)))')
+		->defaults(array(
+			'directory'  => 'admin',
+			'controller' => 'complaint',
+			'action'     => 'index',
+		));
 
 		/*default*/
 	Route::set('controllers', '(<controller>(/<action>(/<id>)))',
 		array(
-			'controller' => '(url|url_goto|static|account|url_stats|admin)',
+			'controller' => '(url|url_goto|static|account|url_stats)',
 		))
 		->defaults(array(
 			'controller' => 'url',
