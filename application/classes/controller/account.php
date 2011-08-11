@@ -130,7 +130,7 @@ class Controller_Account extends Controller_Template
 					$user->add('roles', ORM::factory('role', array('name' => 'login')));
 
 					// Delete the invite to invalidate it
-					$this->invite->delete();
+					$invite->delete();
 
 					$user->login($_POST);
 					$this->session->set('top_message', 'Welcome to zURL! Your account has been created :)');

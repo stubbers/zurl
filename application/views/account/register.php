@@ -17,10 +17,10 @@ Form::show_errors($errors);
 					<input type="text" name="email" id="email" value="<?php echo htmlspecialchars($values['email']); ?>"/><br />
 <?php else : ?>
 					<label for="email">Email Address:</label>
-					<?php echo $values['email']; ?><input type="hidden" name="email" value="<?php echo htmlspecialchars($values['email']); ?>" /><br />
+					<?php echo $values['email']; ?><input type="hidden" name="email" id="email" value="<?php echo htmlspecialchars($values['email']); ?>" /><br />
 					
 					<label for="invite_code">Invite Code:</label>
-					<?php echo $values['invite_code']; ?><input type="hidden" name="invite_code" value="<?php echo $values['invite_code']; ?>" /><br />
+					<?php echo $values['invite_code']; ?><input type="hidden" name="invite_code" id="invite_code" value="<?php echo $values['invite_code']; ?>" /><br />
 <?php endif; ?>
 					<label for="password">Password:</label>
 					<input type="password" name="password" id="password" /><br />

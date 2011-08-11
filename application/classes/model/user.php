@@ -26,6 +26,7 @@ class Model_User extends Model_Auth_User
 			'max_length' => array(127),
 			'email'      => NULL,
 		),
+		'invite_code' => array(),
 	);
 	
 	protected $_has_many = array
