@@ -220,7 +220,15 @@ class Controller_Account extends Controller_Template
 
 				$invite->save();
 				
-				// TODO : Actually send the invite
+				// Email the invite to the invited user
+				// TODO : Dynamically grab the URL base in email content
+				// TODO : Conver this email into some HTML, possibly put it in a view which is generated
+				$email = 'You have been invited to use Zurl.ws. Zurl is a free URL shortner with a nice clean interface and some nice analytics. If you don\'t want to join just ignore this email and you will not get contacted again.
+On the other hand if you would like to join just visit <a href="http://dev.zurl.ws:82/account/register/"' . $invite->auth_code . 'http://dev.zurl.ws:82/account/register/' . $invite->auth_code . '</a>';
+		
+				$headers = array('From: "zURL Invites" <invites@zurl.ws>');
+
+				mail($invite->email, 'You have been invited to Zurl.ws', $email, implode("\r\n", $headers));
 				
 				$this->session->set('top_message', 'Invite sent');
 				$this->request->redirect('account/invite');
