@@ -70,7 +70,7 @@ class Controller_Account extends Controller_Template
 		$page->values = array('username' => '', 'email' => '', 'invite_code' => '');
 		
 		// If we are allowing invites they are required for registration
-		if (Kohana::config('app.allow_invites'))
+		if (Kohana::config('app.allow_registration') == 'invite_only')
 		{
 			// TODO : This is messy, surely the structure here could be more logical, come back to it
 			// Did the user post the form
@@ -189,7 +189,7 @@ class Controller_Account extends Controller_Template
 	public function action_invite()
 	{
 		// If they aren't logged in or we have disabled invites, we don't want to go to this page!
-		if (!$this->logged_in || !Kohana::config('app.allow_invites'))
+		if (!$this->logged_in || Kohana::config('app.allow_registration') != 'invite_only')
 			Request::instance()->redirect('');
 		
 		$this->template->title = 'Invite Friends';
