@@ -219,6 +219,9 @@ class Controller_Account extends Controller_Template
 				$this->user->save();
 
 				$invite->save();
+				
+				// TODO : Actually send the invite
+				
 				$this->session->set('top_message', 'Invite sent');
 				$this->request->redirect('account/invite');
 			} else {
